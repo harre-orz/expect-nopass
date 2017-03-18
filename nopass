@@ -1,0 +1,32 @@
+#!/usr/bin/expect
+
+set timeout 300
+set pass $env(LOGIN_PASSWORD)
+
+spawn bash -c "[join $argv]"
+
+expect {
+  "yes/no" {
+    send "yes\n"
+    exp_continue
+  }
+  "password" {
+    send -- "$pass\n"
+    exp_continue
+  }
+  "passphrase" {
+    send -- "$pass\n"
+    exp_continue
+  }
+  login {
+    interact
+  }
+  timeout {
+    send_error "expect timed out\n"
+    exit 1
+  }
+}
+
+catch wait rc
+exit [lindex $rc 3]
+
