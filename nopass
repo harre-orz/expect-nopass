@@ -1,24 +1,20 @@
 #!/usr/bin/expect
 
 set timeout 300
-set pass $env(LOGIN_PASSWORD)
 
 spawn bash -c "[join $argv]"
 
 expect {
+  -re "\pass(word|phrase)" {
+    set pass $env(LOGIN_PASSWORD)
+    send -- "$pass\n"
+    exp_continue
+  }
   "yes/no" {
     send "yes\n"
     exp_continue
   }
-  "password" {
-    send -- "$pass\n"
-    exp_continue
-  }
-  "passphrase" {
-    send -- "$pass\n"
-    exp_continue
-  }
-  login {
+  "login" {
     interact
   }
   timeout {
