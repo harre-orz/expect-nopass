@@ -1,25 +1,39 @@
 #!/usr/bin/expect
 
-set timeout 300
+spawn -noecho {*}$argv
 
-spawn bash -c "[join $argv]"
-
+set timeout 5
 expect {
-  -re "\pass(word|phrase)" {
-    set pass $env(LOGIN_PASSWORD)
-    send -- "$pass\n"
+  "(yes/no)" {
+    send "yes\n"
     exp_continue
   }
-  "yes/no" {
-    send "yes\n"
+  -re "\[Pp]ass(word|phrase)" {
+    set pass $env(LOGIN_PASSWORD)
+    send -- "$pass\n"
+    set timeout 1
     exp_continue
   }
   "login" {
     interact
   }
   timeout {
-    send_error "expect timed out\n"
-    exit 1
+   if {[catch { system {[[ -t 0 ]]} } error]} {
+      while {[gets stdin line] != -1} {
+        send "$line\n"
+      }
+      send \004
+      log_user 0
+      expect {
+        -ex ^D {}
+        -timeout 5 timeout { exit 1 }
+      }
+      log_user 1
+      expect {
+        eof {}
+        -timeout 600 timeout { exit 1 }
+      }
+    }
   }
 }
 
